@@ -12,6 +12,8 @@ Then open http://localhost:5000 on this machine, or http://<this-pc's-LAN-ip>:50
 from another device on the same network.
 """
 
+from itertools import groupby
+
 from flask import Flask, redirect, render_template, request, url_for
 
 import recipe_db
@@ -22,6 +24,15 @@ app = Flask(__name__)
 
 def _lines_to_list(text):
     return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def _csv_to_list(text):
+    seen = []
+    for item in text.split(","):
+        item = item.strip()
+        if item and item not in seen:
+            seen.append(item)
+    return seen
 
 
 def _form_to_recipe_data(form):
@@ -37,14 +48,30 @@ def _form_to_recipe_data(form):
         "ingredients": _lines_to_list(form.get("ingredients", "")),
         "instructions": _lines_to_list(form.get("instructions", "")),
         "source_url": form.get("source_url", ""),
+        "cuisine": form.get("cuisine", "").strip(),
+        "tags": _csv_to_list(form.get("tags", "")),
     }
 
 
 @app.route("/")
 def index():
     search = request.args.get("q", "").strip()
-    recipes = recipe_db.list_recipes(search)
-    return render_template("index.html", recipes=recipes, search=search)
+    tag = request.args.get("tag", "").strip()
+    cuisine = request.args.get("cuisine", "").strip()
+    recipes = recipe_db.list_recipes(search, tag, cuisine)
+    groups = [
+        (cuisine_name or "Uncategorized", list(group))
+        for cuisine_name, group in groupby(recipes, key=lambda r: r["cuisine"])
+    ]
+    return render_template(
+        "index.html",
+        groups=groups,
+        search=search,
+        tag=tag,
+        cuisine=cuisine,
+        all_tags=recipe_db.list_all_tags(),
+        all_cuisines=recipe_db.list_all_cuisines(),
+    )
 
 
 @app.route("/recipe/<int:recipe_id>")
@@ -61,7 +88,12 @@ def new_recipe():
         data = _form_to_recipe_data(request.form)
         recipe_id = recipe_db.create_recipe(data)
         return redirect(url_for("view_recipe", recipe_id=recipe_id))
-    return render_template("recipe_form.html", recipe=None, form_action=url_for("new_recipe"))
+    return render_template(
+        "recipe_form.html",
+        recipe=None,
+        form_action=url_for("new_recipe"),
+        all_cuisines=recipe_db.list_all_cuisines(),
+    )
 
 
 @app.route("/new/scrape", methods=["GET", "POST"])
@@ -89,9 +121,14 @@ def scrape_recipe():
             "ingredients": scraped.ingredients,
             "instructions": scraped.instructions,
             "source_url": scraped.source_url,
+            "cuisine": "",
+            "tags": [],
         }
         return render_template(
-            "recipe_form.html", recipe=prefill, form_action=url_for("new_recipe")
+            "recipe_form.html",
+            recipe=prefill,
+            form_action=url_for("new_recipe"),
+            all_cuisines=recipe_db.list_all_cuisines(),
         )
     return render_template("scrape.html", error=None, url="")
 
@@ -106,7 +143,10 @@ def edit_recipe(recipe_id):
         recipe_db.update_recipe(recipe_id, data)
         return redirect(url_for("view_recipe", recipe_id=recipe_id))
     return render_template(
-        "recipe_form.html", recipe=recipe, form_action=url_for("edit_recipe", recipe_id=recipe_id)
+        "recipe_form.html",
+        recipe=recipe,
+        form_action=url_for("edit_recipe", recipe_id=recipe_id),
+        all_cuisines=recipe_db.list_all_cuisines(),
     )
 
 

@@ -9,11 +9,18 @@
 
         <div class="recipe-meta">
             {% if recipe.author %}<span>By {{ recipe.author }}</span>{% endif %}
+            {% if recipe.cuisine %}<span>Cuisine: {{ recipe.cuisine }}</span>{% endif %}
             {% if recipe.yield_ %}<span>Yield: {{ recipe.yield_ }}</span>{% endif %}
             {% if recipe.prep_time %}<span>Prep: {{ recipe.prep_time }}</span>{% endif %}
             {% if recipe.cook_time %}<span>Cook: {{ recipe.cook_time }}</span>{% endif %}
             {% if recipe.total_time %}<span>Total: {{ recipe.total_time }}</span>{% endif %}
         </div>
+
+        {% if recipe.tags %}
+            <div class="tag-badges">
+                {% for t in recipe.tags %}<span class="tag-badge">{{ t }}</span>{% endfor %}
+            </div>
+        {% endif %}
 
         {% if recipe.description %}<p class="recipe-description">{{ recipe.description }}</p>{% endif %}
 

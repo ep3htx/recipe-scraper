@@ -35,6 +35,18 @@
             </label>
         </div>
 
+        <div class="form-row">
+            <label>Cuisine
+                <input type="text" name="cuisine" list="cuisine-options" value="{{ recipe.cuisine if recipe else '' }}" placeholder="e.g. Italian">
+                <datalist id="cuisine-options">
+                    {% for c in all_cuisines %}<option value="{{ c }}">{% endfor %}
+                </datalist>
+            </label>
+            <label>Tags <span class="hint">(comma-separated)</span>
+                <input type="text" name="tags" value="{{ recipe.tags|join(', ') if recipe else '' }}" placeholder="e.g. vegetarian, quick, dessert">
+            </label>
+        </div>
+
         <label>Description
             <textarea name="description" rows="2">{{ recipe.description if recipe else '' }}</textarea>
         </label>

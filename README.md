@@ -38,6 +38,8 @@ Back it up or copy it elsewhere to move your recipes to another machine.
 - Import a recipe from a URL — reuses `recipe_scraper.py`'s schema.org
   extraction, then opens an editable preview before saving (`/new/scrape`)
 - Edit or delete any saved recipe
+- Tag recipes with a cuisine (grouped and filterable on the home page) and
+  any number of free-form tags (e.g. "vegetarian, quick, dessert")
 
 `recipe_scraper.py` and `recipe_scraper_gui.py` (the standalone Tkinter
 scraper) are unchanged and still work independently of this app.

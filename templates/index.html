@@ -3,30 +3,53 @@
 {% block content %}
     <form class="search-bar" method="get" action="{{ url_for('index') }}">
         <input type="text" name="q" placeholder="Search by title or ingredient..." value="{{ search }}">
+
+        <select name="cuisine" onchange="this.form.submit()">
+            <option value="">All cuisines</option>
+            {% for c in all_cuisines %}
+                <option value="{{ c }}" {% if c == cuisine %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="tag" onchange="this.form.submit()">
+            <option value="">All tags</option>
+            {% for t in all_tags %}
+                <option value="{{ t }}" {% if t == tag %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+        </select>
+
         <button type="submit">Search</button>
-        {% if search %}<a class="clear-link" href="{{ url_for('index') }}">Clear</a>{% endif %}
+        {% if search or tag or cuisine %}<a class="clear-link" href="{{ url_for('index') }}">Clear</a>{% endif %}
     </form>
 
-    {% if recipes %}
-        <div class="recipe-grid">
-            {% for recipe in recipes %}
-                <a class="recipe-card" href="{{ url_for('view_recipe', recipe_id=recipe.id) }}">
-                    {% if recipe.image %}
-                        <img src="{{ recipe.image }}" alt="" loading="lazy">
-                    {% else %}
-                        <div class="recipe-card-noimage">🍽️</div>
-                    {% endif %}
-                    <div class="recipe-card-body">
-                        <h3>{{ recipe.title }}</h3>
-                        {% if recipe.total_time %}<span class="meta">⏱ {{ recipe.total_time }}</span>{% endif %}
-                    </div>
-                </a>
-            {% endfor %}
-        </div>
+    {% if groups %}
+        {% for cuisine_name, recipes in groups %}
+            <h2 class="group-heading">{{ cuisine_name }}</h2>
+            <div class="recipe-grid">
+                {% for recipe in recipes %}
+                    <a class="recipe-card" href="{{ url_for('view_recipe', recipe_id=recipe.id) }}">
+                        {% if recipe.image %}
+                            <img src="{{ recipe.image }}" alt="" loading="lazy">
+                        {% else %}
+                            <div class="recipe-card-noimage">🍽️</div>
+                        {% endif %}
+                        <div class="recipe-card-body">
+                            <h3>{{ recipe.title }}</h3>
+                            {% if recipe.total_time %}<span class="meta">⏱ {{ recipe.total_time }}</span>{% endif %}
+                            {% if recipe.tags %}
+                                <div class="tag-badges">
+                                    {% for t in recipe.tags %}<span class="tag-badge">{{ t }}</span>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endfor %}
     {% else %}
         <p class="empty-state">
-            {% if search %}
-                No recipes match "{{ search }}".
+            {% if search or tag or cuisine %}
+                No recipes match these filters.
             {% else %}
                 No recipes yet. <a href="{{ url_for('new_recipe') }}">Add one manually</a>
                 or <a href="{{ url_for('scrape_recipe') }}">import one from a URL</a>.
