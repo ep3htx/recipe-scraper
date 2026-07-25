@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Recipe Box{% endblock %}
+{% block content %}
+    <form class="search-bar" method="get" action="{{ url_for('index') }}">
+        <input type="text" name="q" placeholder="Search by title or ingredient..." value="{{ search }}">
+        <button type="submit">Search</button>
+        {% if search %}<a class="clear-link" href="{{ url_for('index') }}">Clear</a>{% endif %}
+    </form>
+
+    {% if recipes %}
+        <div class="recipe-grid">
+            {% for recipe in recipes %}
+                <a class="recipe-card" href="{{ url_for('view_recipe', recipe_id=recipe.id) }}">
+                    {% if recipe.image %}
+                        <img src="{{ recipe.image }}" alt="" loading="lazy">
+                    {% else %}
+                        <div class="recipe-card-noimage">🍽️</div>
+                    {% endif %}
+                    <div class="recipe-card-body">
+                        <h3>{{ recipe.title }}</h3>
+                        {% if recipe.total_time %}<span class="meta">⏱ {{ recipe.total_time }}</span>{% endif %}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">
+            {% if search %}
+                No recipes match "{{ search }}".
+            {% else %}
+                No recipes yet. <a href="{{ url_for('new_recipe') }}">Add one manually</a>
+                or <a href="{{ url_for('scrape_recipe') }}">import one from a URL</a>.
+            {% endif %}
+        </p>
+    {% endif %}
+{% endblock %}

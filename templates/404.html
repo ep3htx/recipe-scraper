@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Not found — Recipe Box{% endblock %}
+{% block content %}
+    <h1>Recipe not found</h1>
+    <p>No recipe with id {{ recipe_id }}.</p>
+    <a class="button" href="{{ url_for('index') }}">Back to all recipes</a>
+{% endblock %}

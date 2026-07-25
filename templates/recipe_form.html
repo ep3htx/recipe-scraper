@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{% if recipe %}Edit Recipe{% else %}New Recipe{% endif %} — Recipe Box{% endblock %}
+{% block content %}
+    <h1>{% if recipe %}Edit Recipe{% else %}New Recipe{% endif %}</h1>
+    {% if recipe and recipe.source_url %}
+        <p class="hint">Imported from <a href="{{ recipe.source_url }}" target="_blank" rel="noopener">{{ recipe.source_url }}</a> — review and adjust before saving.</p>
+    {% endif %}
+
+    <form method="post" action="{{ form_action }}" class="recipe-form">
+        <label>Title
+            <input type="text" name="title" value="{{ recipe.title if recipe else '' }}" required>
+        </label>
+
+        <div class="form-row">
+            <label>Image URL
+                <input type="text" name="image" value="{{ recipe.image if recipe else '' }}">
+            </label>
+            <label>Author
+                <input type="text" name="author" value="{{ recipe.author if recipe else '' }}">
+            </label>
+        </div>
+
+        <div class="form-row">
+            <label>Yield
+                <input type="text" name="yield_" value="{{ recipe.yield_ if recipe else '' }}" placeholder="e.g. 4 servings">
+            </label>
+            <label>Prep time
+                <input type="text" name="prep_time" value="{{ recipe.prep_time if recipe else '' }}" placeholder="e.g. 15m">
+            </label>
+            <label>Cook time
+                <input type="text" name="cook_time" value="{{ recipe.cook_time if recipe else '' }}" placeholder="e.g. 30m">
+            </label>
+            <label>Total time
+                <input type="text" name="total_time" value="{{ recipe.total_time if recipe else '' }}" placeholder="e.g. 45m">
+            </label>
+        </div>
+
+        <label>Description
+            <textarea name="description" rows="2">{{ recipe.description if recipe else '' }}</textarea>
+        </label>
+
+        <label>Ingredients <span class="hint">(one per line)</span>
+            <textarea name="ingredients" rows="8" placeholder="2 cups flour&#10;1 tsp salt&#10;...">{{ recipe.ingredients|join('\n') if recipe else '' }}</textarea>
+        </label>
+
+        <label>Instructions <span class="hint">(one step per line)</span>
+            <textarea name="instructions" rows="8" placeholder="Preheat oven to 350F&#10;Mix dry ingredients&#10;...">{{ recipe.instructions|join('\n') if recipe else '' }}</textarea>
+        </label>
+
+        <label>Source URL
+            <input type="text" name="source_url" value="{{ recipe.source_url if recipe else '' }}">
+        </label>
+
+        <div class="actions">
+            <button type="submit" class="button">Save Recipe</button>
+            <a class="button button-secondary" href="{{ url_for('index') }}">Cancel</a>
+        </div>
+    </form>
+{% endblock %}

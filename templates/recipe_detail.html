@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ recipe.title }} — Recipe Box{% endblock %}
+{% block content %}
+    <a class="back-link" href="{{ url_for('index') }}">&larr; All recipes</a>
+
+    <article class="recipe-detail">
+        {% if recipe.image %}<img class="recipe-hero" src="{{ recipe.image }}" alt="">{% endif %}
+        <h1>{{ recipe.title }}</h1>
+
+        <div class="recipe-meta">
+            {% if recipe.author %}<span>By {{ recipe.author }}</span>{% endif %}
+            {% if recipe.yield_ %}<span>Yield: {{ recipe.yield_ }}</span>{% endif %}
+            {% if recipe.prep_time %}<span>Prep: {{ recipe.prep_time }}</span>{% endif %}
+            {% if recipe.cook_time %}<span>Cook: {{ recipe.cook_time }}</span>{% endif %}
+            {% if recipe.total_time %}<span>Total: {{ recipe.total_time }}</span>{% endif %}
+        </div>
+
+        {% if recipe.description %}<p class="recipe-description">{{ recipe.description }}</p>{% endif %}
+
+        <div class="recipe-columns">
+            <section>
+                <h2>Ingredients</h2>
+                <ul class="ingredient-list">
+                    {% for ing in recipe.ingredients %}<li>{{ ing }}</li>{% endfor %}
+                </ul>
+            </section>
+            <section>
+                <h2>Instructions</h2>
+                <ol class="instruction-list">
+                    {% for step in recipe.instructions %}<li>{{ step }}</li>{% endfor %}
+                </ol>
+            </section>
+        </div>
+
+        {% if recipe.source_url %}
+            <p class="source-link">Source: <a href="{{ recipe.source_url }}" target="_blank" rel="noopener">{{ recipe.source_url }}</a></p>
+        {% endif %}
+
+        <div class="actions">
+            <a class="button" href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('delete_recipe', recipe_id=recipe.id) }}"
+                  onsubmit="return confirm('Delete this recipe? This cannot be undone.');">
+                <button type="submit" class="button button-danger">Delete</button>
+            </form>
+        </div>
+    </article>
+{% endblock %}
