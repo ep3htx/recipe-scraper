@@ -1,0 +1,114 @@
+# Wellness Dashboard — Portainer Stacks variant for cerberus.
+#
+# Differs from the standalone docker-compose.yml in exactly the ways
+# cerberus's existing stacks (network/vaultwarden/lamp/nextcloud/monitoring)
+# do things:
+#   - No bundled Nginx container — Nginx Proxy Manager (the `network` stack)
+#     is already the reverse proxy for the whole box. Route to this stack
+#     from NPM instead (see DEPLOY_CERBERUS.md).
+#   - Joins the shared external `proxy` network so NPM can reach these
+#     containers by name, same as every other stack.
+#   - No host ports published for backend/frontend/postgres — reachable
+#     only from other containers on `proxy` (i.e. via NPM), never directly
+#     from the LAN or the internet.
+#   - Variables are set in Portainer's per-stack "Environment variables" UI,
+#     not a committed .env file — matches how every other stack here is run.
+#     Every optional var has a `:-default` fallback so an unset Portainer
+#     var doesn't get passed through as a literal empty string.
+#
+# Deploy via Portainer -> Stacks -> Add stack -> paste this file -> fill in
+# the environment variables listed in DEPLOY_CERBERUS.md -> Deploy.
+
+services:
+  wellness-postgres:
+    image: postgres:16-alpine
+    container_name: wellness-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${WELLNESS_DB_USER:-wellness}
+      POSTGRES_PASSWORD: ${WELLNESS_DB_PASSWORD}
+      POSTGRES_DB: ${WELLNESS_DB_NAME:-wellness}
+    volumes:
+      - ${DOCKER_DATA}/wellness/postgres:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - proxy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WELLNESS_DB_USER:-wellness} -d ${WELLNESS_DB_NAME:-wellness}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  wellness-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wellness-backend
+    restart: unless-stopped
+    depends_on:
+      wellness-postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      DATABASE_URL: postgresql://${WELLNESS_DB_USER:-wellness}:${WELLNESS_DB_PASSWORD}@wellness-postgres:5432/${WELLNESS_DB_NAME:-wellness}
+      JWT_ACCESS_SECRET: ${WELLNESS_JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${WELLNESS_JWT_REFRESH_SECRET}
+      JWT_ACCESS_TTL: ${WELLNESS_JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${WELLNESS_JWT_REFRESH_TTL:-30d}
+      COOKIE_SECURE: "true" # NPM terminates TLS in front of this stack
+      SINGLE_USER_MODE: ${WELLNESS_SINGLE_USER_MODE:-true}
+      PUBLIC_ORIGIN: ${WELLNESS_PUBLIC_ORIGIN}
+      AI_PROVIDER: ${WELLNESS_AI_PROVIDER:-disabled}
+      AI_MODEL: ${WELLNESS_AI_MODEL:-llama3}
+      OPENAI_API_KEY: ${WELLNESS_OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${WELLNESS_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OLLAMA_BASE_URL: ${WELLNESS_OLLAMA_BASE_URL:-http://wellness-ollama:11434}
+      RATE_LIMIT_WINDOW_MS: "60000"
+      RATE_LIMIT_MAX: "120"
+    volumes:
+      - ${DOCKER_DATA}/wellness/uploads:/app/uploads
+    expose:
+      - "4000"
+    networks:
+      - proxy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health', r => process.exit(r.statusCode===200?0:1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  wellness-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: wellness-frontend
+    restart: unless-stopped
+    depends_on:
+      - wellness-backend
+    expose:
+      - "3000"
+    networks:
+      - proxy
+
+  # Optional local AI runtime. Not started by default.
+  # Enable with: docker compose -f docker-compose.portainer.yml --profile local-ai up -d
+  # Then set WELLNESS_AI_PROVIDER=ollama in Portainer's stack env vars.
+  wellness-ollama:
+    image: ollama/ollama:latest
+    container_name: wellness-ollama
+    restart: unless-stopped
+    profiles: ["local-ai"]
+    volumes:
+      - ${DOCKER_DATA}/wellness/ollama:/root/.ollama
+    expose:
+      - "11434"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

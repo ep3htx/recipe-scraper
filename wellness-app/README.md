@@ -30,6 +30,13 @@ Everything is configured through `.env` — no hard-coded secrets or API
 keys anywhere in the code, and the frontend never sees your AI provider
 key (all AI calls are made by the backend).
 
+> **Deploying behind an existing reverse proxy (e.g. Nginx Proxy Manager +
+> Portainer, as on cerberus)?** Use `docker-compose.portainer.yml` instead
+> of the standalone `docker-compose.yml` below, and see
+> [DEPLOY_CERBERUS.md](./DEPLOY_CERBERUS.md) — the bundled Nginx container
+> here assumes it owns ports 80/443, which won't be true if something else
+> already does.
+
 ## Contents
 
 - [Quick start](#quick-start)
