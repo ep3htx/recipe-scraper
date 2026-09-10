@@ -13,6 +13,25 @@ container entirely and joins the shared `proxy` network instead, matching
 how every other stack here (`network`, `vaultwarden`, `lamp`, `nextcloud`,
 `homer`, `monitoring`) is wired.
 
+## Fastest path: one script, run on cerberus itself
+
+```bash
+ssh ep@192.168.1.232
+git clone --branch claude/wellness-dashboard-app-ralmn0 https://github.com/ep3htx/recipe-scraper.git /opt/docker-data/wellness/src
+/opt/docker-data/wellness/src/wellness-app/scripts/deploy-cerberus.sh
+```
+
+`scripts/deploy-cerberus.sh` clones/updates the repo, generates DB/JWT
+secrets once (reused on every re-run, so redeploying doesn't invalidate
+sessions or the database), and runs
+`docker compose -f docker-compose.portainer.yml up -d --build`. It prints
+the NPM wiring steps at the end — those still happen in NPM's UI, since
+this script doesn't touch NPM. Re-run it any time to pull and redeploy a
+newer version.
+
+The rest of this doc explains the same deployment through Portainer's
+Stacks UI instead, if you'd rather manage it there like your other stacks.
+
 The existing PHP/MySQL wellness tracker at `lamp-web:8083/wellness/` is
 untouched by any of this — this deploys as a fully separate stack. Nothing
 here reads or writes `lampdb`.
