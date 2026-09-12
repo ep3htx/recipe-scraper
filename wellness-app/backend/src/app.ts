@@ -20,6 +20,8 @@ import mealPlansRoutes from "./routes/mealPlans.routes";
 import groceryRoutes from "./routes/grocery.routes";
 import pantryRoutes from "./routes/pantry.routes";
 import exerciseRoutes from "./routes/exercise.routes";
+import exerciseLibraryRoutes from "./routes/exerciseLibrary.routes";
+import programsRoutes from "./routes/programs.routes";
 import habitsRoutes from "./routes/habits.routes";
 import waterRoutes from "./routes/water.routes";
 import sleepRoutes from "./routes/sleep.routes";
@@ -59,6 +61,8 @@ export function createApp() {
   app.use("/api/grocery-lists", groceryRoutes);
   app.use("/api/pantry", pantryRoutes);
   app.use("/api/exercise", exerciseRoutes);
+  app.use("/api/exercise-library", exerciseLibraryRoutes);
+  app.use("/api/programs", programsRoutes);
   app.use("/api/habits", habitsRoutes);
   app.use("/api/water", waterRoutes);
   app.use("/api/sleep", sleepRoutes);

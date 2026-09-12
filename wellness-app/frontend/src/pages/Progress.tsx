@@ -41,7 +41,7 @@ export default function Progress() {
   const activeMetric = METRICS.find((m) => m.value === metric)!;
 
   return (
-    <div className="space-y-4 px-4 pt-4">
+    <div className="space-y-4 px-4 pt-4 md:px-0 md:pt-0">
       <header>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Progress</h1>
       </header>

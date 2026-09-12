@@ -12,9 +12,14 @@ import type {
   Recipe,
   MealRecord,
   MealPlan,
+  MealPlanItem,
   GroceryList,
   PantryItem,
   WorkoutSession,
+  Exercise,
+  WorkoutProgram,
+  WorkoutProgramDay,
+  ProgramEnrollment,
   Habit,
   WaterEntry,
   SleepEntry,
@@ -109,6 +114,11 @@ export const mealPlansApi = {
   create: (data: Partial<MealPlan>) => api.post<MealPlan>("/meal-plans", data),
   remove: (id: string) => api.delete<void>(`/meal-plans/${id}`),
   toGroceryList: (id: string) => api.post<GroceryList>(`/meal-plans/${id}/grocery-list`),
+  addItemFromFood: (planId: string, data: { foodId: string; dayOffset: number; mealType: string; quantity?: number }) =>
+    api.post<MealPlanItem>(`/meal-plans/${planId}/items/from-food`, data),
+  moveItem: (planId: string, itemId: string, data: { dayOffset?: number; mealType?: string }) =>
+    api.put<MealPlanItem>(`/meal-plans/${planId}/items/${itemId}`, data),
+  removeItem: (planId: string, itemId: string) => api.delete<void>(`/meal-plans/${planId}/items/${itemId}`),
 };
 
 export const groceryApi = {
@@ -158,6 +168,25 @@ export const sleepApi = {
 export const stepsApi = {
   list: (query?: { from?: string; to?: string }) => api.get<{ date: string; steps: number }[]>("/steps", query),
   set: (date: string, steps: number) => api.put("/steps", { date, steps }),
+};
+
+// ---- Exercise library & workout programs ----
+export const exerciseLibraryApi = {
+  search: (query?: { search?: string; category?: string; muscleGroup?: string; bodyweightOnly?: boolean }) =>
+    api.get<Exercise[]>("/exercise-library", query),
+  muscleGroups: () => api.get<string[]>("/exercise-library/muscle-groups"),
+};
+
+export const programsApi = {
+  list: (difficulty?: string) => api.get<{ programs: WorkoutProgram[]; activeProgramId: string | null }>("/programs", { difficulty }),
+  get: (id: string) => api.get<WorkoutProgram>(`/programs/${id}`),
+  create: (data: Partial<WorkoutProgram>) => api.post<WorkoutProgram>("/programs", data),
+  remove: (id: string) => api.delete<void>(`/programs/${id}`),
+  enroll: (id: string) => api.post<ProgramEnrollment>(`/programs/${id}/enroll`),
+  activeEnrollment: () => api.get<{ enrollment: ProgramEnrollment; day: WorkoutProgramDay | null } | null>("/programs/enrollment/active"),
+  completeToday: (data?: { durationMinutes?: number; caloriesBurned?: number; notes?: string }) =>
+    api.post<{ session: WorkoutSession; programComplete: boolean; enrollment: ProgramEnrollment | null }>("/programs/enrollment/complete", data ?? {}),
+  stopActive: () => api.delete<void>("/programs/enrollment/active"),
 };
 
 // ---- Progress / charts / export ----

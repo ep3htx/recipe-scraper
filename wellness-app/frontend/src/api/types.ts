@@ -236,6 +236,61 @@ export interface WorkoutSession {
   sets: WorkoutSet[];
 }
 
+export interface Exercise {
+  id: string;
+  name: string;
+  category: string;
+  equipment?: string | null;
+  muscleGroup?: string | null;
+  description?: string | null;
+}
+
+export interface WorkoutProgramExercise {
+  id: string;
+  exerciseId?: string | null;
+  exerciseName: string;
+  sets?: number | null;
+  reps?: number | null;
+  durationSeconds?: number | null;
+  restSeconds?: number | null;
+  order: number;
+}
+
+export interface WorkoutProgramDay {
+  id: string;
+  programId: string;
+  weekNumber: number;
+  dayNumber: number;
+  title: string;
+  notes?: string | null;
+  exercises: WorkoutProgramExercise[];
+}
+
+export interface WorkoutProgram {
+  id: string;
+  userId?: string | null;
+  name: string;
+  description?: string | null;
+  durationWeeks: number;
+  daysPerWeek: number;
+  difficulty: "beginner" | "intermediate" | "advanced";
+  equipment: string[];
+  days?: WorkoutProgramDay[];
+  _count?: { days: number };
+}
+
+export interface ProgramEnrollment {
+  id: string;
+  userId: string;
+  programId: string;
+  startedAt: string;
+  currentWeek: number;
+  currentDay: number;
+  active: boolean;
+  completedAt?: string | null;
+  program?: WorkoutProgram;
+}
+
 export interface Habit {
   id: string;
   name: string;

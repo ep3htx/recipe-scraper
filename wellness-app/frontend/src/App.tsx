@@ -7,6 +7,7 @@ import Log from "./pages/Log";
 import Meals from "./pages/Meals";
 import Coach from "./pages/Coach";
 import Progress from "./pages/Progress";
+import Programs from "./pages/Programs";
 import Settings from "./pages/Settings";
 
 export default function App() {
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/meals" element={<Meals />} />
         <Route path="/coach" element={<Coach />} />
         <Route path="/progress" element={<Progress />} />
+        <Route path="/programs" element={<Programs />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Sparkles, ShoppingCart, Check } from "lucide-react";
+import { Plus, Trash2, Sparkles, Check } from "lucide-react";
 import clsx from "clsx";
-import { mealsApi, foodsApi, mealPlansApi, groceryApi, pantryApi, aiApi } from "../api/endpoints";
+import { mealsApi, foodsApi, groceryApi, pantryApi, aiApi } from "../api/endpoints";
 import type { Food } from "../api/types";
 import Card from "../components/Card";
 import Modal from "../components/Modal";
+import MealBoard from "../components/mealBoard/MealBoard";
 
 const TABS = ["Today", "Plan", "Grocery", "Pantry"] as const;
 type Tab = (typeof TABS)[number];
@@ -26,7 +27,7 @@ export default function Meals() {
   }, []);
 
   return (
-    <div className="space-y-4 px-4 pt-4">
+    <div className="space-y-4 px-4 pt-4 md:px-0 md:pt-0">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Meals</h1>
         {tab === "Today" && (
@@ -242,68 +243,7 @@ function AddMealModal({ open, onClose }: { open: boolean; onClose: () => void })
 // ---------------------------------------------------------------------------
 
 function PlanTab() {
-  const queryClient = useQueryClient();
-  const { data: plans } = useQuery({ queryKey: ["meal-plans"], queryFn: mealPlansApi.list });
-  const plan = plans?.[0];
-
-  const generate = useMutation({
-    mutationFn: () => aiApi.generateMealPlan({ days: 7, mealsPerDay: 3, snacksPerDay: 1 }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
-  });
-
-  const toGrocery = useMutation({
-    mutationFn: (id: string) => mealPlansApi.toGroceryList(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["grocery-lists"] }),
-  });
-
-  return (
-    <div className="space-y-3">
-      <button
-        onClick={() => generate.mutate()}
-        disabled={generate.isPending}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 py-3 text-sm font-semibold text-white disabled:opacity-50"
-      >
-        <Sparkles size={16} /> {generate.isPending ? "Generating your plan…" : "Generate meal plan with AI"}
-      </button>
-      {generate.isError && <p className="text-center text-xs text-rose-500">{(generate.error as Error).message}</p>}
-
-      {plan ? (
-        <>
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">{plan.name}</h3>
-            <button onClick={() => toGrocery.mutate(plan.id)} className="flex items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400">
-              <ShoppingCart size={14} /> Make grocery list
-            </button>
-          </div>
-          {Array.from(new Set(plan.items.map((i) => i.dayOffset)))
-            .sort((a, b) => a - b)
-            .map((day) => (
-              <Card key={day} title={`Day ${day + 1}`}>
-                <div className="space-y-2">
-                  {plan.items
-                    .filter((i) => i.dayOffset === day)
-                    .map((item) => (
-                      <div key={item.id} className="text-sm">
-                        <p className="font-medium text-gray-800 dark:text-gray-100">
-                          <span className="mr-1.5 text-xs font-normal uppercase text-gray-400">{item.mealType}</span>
-                          {item.title}
-                        </p>
-                        {item.calories != null && (
-                          <p className="text-xs text-gray-400">
-                            {Math.round(item.calories)} cal · {Math.round(item.protein ?? 0)}g protein
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              </Card>
-            ))}
-        </>
-      ) : (
-        <p className="py-8 text-center text-sm text-gray-400">No meal plan yet — generate one with AI, or add meals manually via the API.</p>
-      )}
-    </div>
-  );
+  return <MealBoard />;
 }
 
 // ---------------------------------------------------------------------------

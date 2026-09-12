@@ -77,6 +77,84 @@ router.delete(
   })
 );
 
+// ---- Individual items (the meal-planning board adds/moves/removes one
+// card at a time — drag a food onto a day, drag a card to another day) ----
+
+router.post(
+  "/:id/items",
+  validateBody(planItemSchema),
+  asyncHandler(async (req: Request, res: Response) => {
+    const plan = await prisma.mealPlan.findFirst({ where: { id: req.params.id, userId: req.userId! } });
+    if (!plan) throw AppError.notFound("Meal plan not found");
+    const item = await prisma.mealPlanItem.create({ data: { ...req.body, mealPlanId: plan.id } });
+    res.status(201).json(item);
+  })
+);
+
+router.post(
+  "/:id/items/from-food",
+  validateBody(
+    z.object({
+      foodId: z.string().uuid(),
+      dayOffset: z.number().int().min(0).max(6),
+      mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]),
+      quantity: z.number().positive().default(1),
+    })
+  ),
+  asyncHandler(async (req: Request, res: Response) => {
+    const plan = await prisma.mealPlan.findFirst({ where: { id: req.params.id, userId: req.userId! } });
+    if (!plan) throw AppError.notFound("Meal plan not found");
+    const food = await prisma.food.findFirst({ where: { id: req.body.foodId, OR: [{ userId: req.userId! }, { userId: null }] } });
+    if (!food) throw AppError.notFound("Food not found");
+
+    const { quantity } = req.body;
+    const item = await prisma.mealPlanItem.create({
+      data: {
+        mealPlanId: plan.id,
+        dayOffset: req.body.dayOffset,
+        mealType: req.body.mealType,
+        foodId: food.id,
+        title: food.name,
+        calories: food.calories * quantity,
+        protein: food.protein * quantity,
+        carbs: food.carbs * quantity,
+        fat: food.fat * quantity,
+        fiber: food.fiber ? food.fiber * quantity : undefined,
+        sodium: food.sodium ? food.sodium * quantity : undefined,
+        ingredients: [{ name: food.name, quantity: food.servingSize }],
+      },
+    });
+    res.status(201).json(item);
+  })
+);
+
+router.put(
+  "/:id/items/:itemId",
+  validateBody(planItemSchema.partial()),
+  asyncHandler(async (req: Request, res: Response) => {
+    const plan = await prisma.mealPlan.findFirst({ where: { id: req.params.id, userId: req.userId! } });
+    if (!plan) throw AppError.notFound("Meal plan not found");
+    const item = await prisma.mealPlanItem.findFirst({ where: { id: req.params.itemId, mealPlanId: plan.id } });
+    if (!item) throw AppError.notFound("Item not found");
+    // A drag between board cells is just this: update which day/meal-type
+    // slot the item belongs to.
+    const updated = await prisma.mealPlanItem.update({ where: { id: item.id }, data: req.body });
+    res.json(updated);
+  })
+);
+
+router.delete(
+  "/:id/items/:itemId",
+  asyncHandler(async (req: Request, res: Response) => {
+    const plan = await prisma.mealPlan.findFirst({ where: { id: req.params.id, userId: req.userId! } });
+    if (!plan) throw AppError.notFound("Meal plan not found");
+    const item = await prisma.mealPlanItem.findFirst({ where: { id: req.params.itemId, mealPlanId: plan.id } });
+    if (!item) throw AppError.notFound("Item not found");
+    await prisma.mealPlanItem.delete({ where: { id: item.id } });
+    res.status(204).end();
+  })
+);
+
 // Converts every ingredient across the plan's meals into a single grocery
 // list, grouped by category (best-effort categorization by keyword).
 router.post(

@@ -18,7 +18,7 @@ export default function Coach() {
   const { data: today } = useQuery({ queryKey: ["ai", "coach-today"], queryFn: aiApi.today, enabled: status?.enabled !== false });
 
   return (
-    <div className="space-y-4 px-4 pt-4">
+    <div className="space-y-4 px-4 pt-4 md:mx-auto md:max-w-3xl md:px-0 md:pt-0">
       <header className="flex items-center gap-2">
         <Sparkles className="text-brand-500" size={22} />
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">AI Coach</h1>

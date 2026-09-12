@@ -13,7 +13,9 @@
     "prisma:migrate": "prisma migrate deploy",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "seed:foods": "node dist/scripts/seedFoods.js"
+    "seed:foods": "node dist/scripts/seedFoods.js",
+    "seed:exercises": "node dist/scripts/seedExercises.js",
+    "seed:programs": "node dist/scripts/seedPrograms.js"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

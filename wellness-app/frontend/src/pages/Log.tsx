@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Trash2, Moon, Footprints } from "lucide-react";
+import { Trash2, Moon, Footprints, Dumbbell, ChevronRight } from "lucide-react";
 import { weightApi, vitalsApi, waterApi, exerciseApi, sleepApi, stepsApi } from "../api/endpoints";
 import Card from "../components/Card";
 import QuickActionButtons from "../components/QuickActionButtons";
@@ -29,13 +30,23 @@ export default function Log() {
   const saveSteps = useMutation({ mutationFn: () => stepsApi.set(today, Number(stepsCount)), onSuccess: invalidate });
 
   return (
-    <div className="space-y-5 px-4 pt-4">
+    <div className="space-y-5 px-4 pt-4 md:mx-auto md:max-w-3xl md:px-0 md:pt-0">
       <header>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Log</h1>
         <p className="text-sm text-gray-400">Quick entries — as few taps as possible.</p>
       </header>
 
       <QuickActionButtons onSelect={setQuickLog} />
+
+      <Link
+        to="/programs"
+        className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 shadow-sm md:hidden dark:border-gray-800 dark:bg-gray-900"
+      >
+        <span className="flex items-center gap-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
+          <Dumbbell size={18} className="text-brand-500" /> Workout Programs
+        </span>
+        <ChevronRight size={16} className="text-gray-300" />
+      </Link>
 
       <Card>
         <div className="grid grid-cols-2 gap-3">
