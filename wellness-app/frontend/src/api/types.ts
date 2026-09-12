@@ -345,6 +345,13 @@ export interface AIInsight {
   content: { summary: string; wins: string[]; improvements: string[]; focus: string };
 }
 
+export interface ApiToken {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsedAt?: string | null;
+}
+
 export interface ChartPoint {
   date: string;
   value?: number;

@@ -49,6 +49,7 @@ key (all AI calls are made by the backend).
 - [Local development (without Docker)](#local-development-without-docker)
 - [Project structure](#project-structure)
 - [Security notes](#security-notes)
+- [iOS Shortcuts: automatic step count sync](#ios-shortcuts-automatic-step-count-sync)
 - [Troubleshooting](#troubleshooting)
 - [Roadmap / future integrations](#roadmap--future-integrations)
 
@@ -277,6 +278,45 @@ wellness-app/
   password change is written to the audit log.
 - The AI Coach never sees your data unless you enable a provider, and the
   API key/URL for that provider never leaves the backend.
+- Personal API tokens (Settings → API tokens) are for non-interactive
+  clients like iOS Shortcuts. Each is a random 256-bit value shown once at
+  creation and stored server-side only as a SHA-256 hash — losing it means
+  generating a new one, not recovering the old one. Treat a token like a
+  password: anyone who has it can act as you, so revoke it immediately if
+  it's ever exposed (e.g. pasted somewhere public).
+
+## iOS Shortcuts: automatic step count sync
+
+There's no Apple Health cloud API, so the app can't pull your step count on
+its own. Instead, an iOS Shortcut reads today's step count from Health and
+pushes it to the app using a personal API token — this runs entirely on
+your phone, nothing routes through Apple or a third party.
+
+1. **Create a token**: in the app, go to **Settings → API tokens**, give it
+   a name like "iPhone Shortcuts", and tap **Create**. Copy the token
+   immediately — it's only shown once. It looks like `wln_<64 hex chars>`.
+2. **Build the Shortcut** (Shortcuts app → **+** → new shortcut):
+   - Add **Get Health Sample** → type **Steps**, set the range to **Today**.
+   - Add **Calculate Statistics** on the health samples → statistic **Sum**
+     (a single day can have many short samples that need adding together).
+   - Add **Get Contents of URL**:
+     - URL: `https://<your-domain>/api/steps`
+     - Method: `PUT`
+     - Headers: `Authorization` → `Bearer <your token>`, `Content-Type` →
+       `application/json`
+     - Request body (JSON): `{"date": "<today>", "steps": <sum from above>}`
+       — for `date`, add a **Format Date** action (`Current Date`, format
+       `yyyy-MM-dd`) and insert it as the `date` value; insert the
+       Calculate Statistics result as `steps`.
+3. **Automate it**: Shortcuts app → **Automation** → **+** → **Create
+   Personal Automation** → **Time of Day** (e.g. 11:55 PM daily, or run it
+   more often — `PUT /api/steps` overwrites that day's total, so re-running
+   it is safe). Choose **Run Immediately** (not "Ask Before Running") so it
+   fires unattended.
+
+Steps logged this way show up on the Dashboard and in Progress → Steps
+exactly like a manual entry — the endpoint doesn't distinguish who called
+it, only that the token belongs to your account.
 
 ## Troubleshooting
 
@@ -294,7 +334,9 @@ wellness-app/
 ## Roadmap / future integrations
 
 The data model and AI abstraction are built so these can be added without
-a redesign: Apple Health / Google Health Connect / Garmin / Fitbit /
-Withings sync, smart scale and BP monitor integrations, barcode scanning
-for food lookup, grocery delivery handoff, calendar sync, and push
+a redesign: automatic sync for weight/vitals from Google Health Connect /
+Garmin / Fitbit / Withings (steps already work today via [iOS
+Shortcuts](#ios-shortcuts-automatic-step-count-sync) and personal API
+tokens), smart scale and BP monitor integrations, barcode scanning for
+food lookup, grocery delivery handoff, calendar sync, and push
 notifications. None of these are implemented yet.

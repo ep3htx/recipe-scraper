@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { LogOut, Trash2, Moon, Sun, Monitor } from "lucide-react";
+import { LogOut, Trash2, Moon, Sun, Monitor, Copy, Check, Key } from "lucide-react";
 import clsx from "clsx";
-import { usersApi, goalsApi, vitalsApi, preferencesApi } from "../api/endpoints";
+import { usersApi, goalsApi, vitalsApi, preferencesApi, apiTokensApi } from "../api/endpoints";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import Card from "../components/Card";
@@ -50,6 +50,7 @@ export default function Settings() {
       <GoalsCard />
       <VitalRangesCard />
       <PreferencesCard />
+      <ApiTokensCard />
 
       <button
         onClick={() => logout()}
@@ -246,6 +247,87 @@ function PreferencesCard() {
           </span>
         ))}
         {!prefs?.length && <p className="text-xs text-gray-400">Nothing saved yet.</p>}
+      </div>
+    </Card>
+  );
+}
+
+function ApiTokensCard() {
+  const queryClient = useQueryClient();
+  const { data: tokens } = useQuery({ queryKey: ["api-tokens"], queryFn: apiTokensApi.list });
+  const [name, setName] = useState("");
+  const [newToken, setNewToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const create = useMutation({
+    mutationFn: () => apiTokensApi.create(name.trim()),
+    onSuccess: (created) => {
+      setNewToken(created.token);
+      setName("");
+      setCopied(false);
+      queryClient.invalidateQueries({ queryKey: ["api-tokens"] });
+    },
+  });
+  const remove = useMutation({ mutationFn: apiTokensApi.remove, onSuccess: () => queryClient.invalidateQueries({ queryKey: ["api-tokens"] }) });
+
+  return (
+    <Card title="API tokens">
+      <p className="mb-3 text-xs text-gray-400">
+        Use a token to send data from outside apps — like an iOS Shortcut that logs your daily step count automatically. Each token acts as you, so treat it like a password and revoke it
+        if you no longer need it.
+      </p>
+
+      {newToken && (
+        <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs dark:border-amber-800 dark:bg-amber-900/20">
+          <p className="mb-2 font-semibold text-amber-800 dark:text-amber-300">Copy this token now — it won't be shown again.</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 truncate rounded-lg bg-white px-2 py-1.5 font-mono text-[11px] text-gray-800 dark:bg-gray-900 dark:text-gray-200">{newToken}</code>
+            <button
+              onClick={async () => {
+                await navigator.clipboard.writeText(newToken);
+                setCopied(true);
+              }}
+              className="flex shrink-0 items-center gap-1 rounded-lg bg-amber-600 px-2.5 py-1.5 text-white"
+            >
+              {copied ? <Check size={13} /> : <Copy size={13} />}
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <button onClick={() => setNewToken(null)} className="mt-2 text-amber-700 underline dark:text-amber-400">
+            Done
+          </button>
+        </div>
+      )}
+
+      <form
+        className="mb-3 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (name.trim()) create.mutate();
+        }}
+      >
+        <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. iPhone Shortcuts" />
+        <button type="submit" disabled={create.isPending} className="shrink-0 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white disabled:opacity-50">
+          {create.isPending ? "Creating…" : "Create"}
+        </button>
+      </form>
+
+      <div className="space-y-2">
+        {tokens?.map((t) => (
+          <div key={t.id} className="flex items-center justify-between rounded-xl bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <Key size={14} className="shrink-0 text-gray-400" />
+              <div className="truncate">
+                <p className="truncate font-medium text-gray-900 dark:text-gray-50">{t.name}</p>
+                <p className="text-[11px] text-gray-400">{t.lastUsedAt ? `Last used ${new Date(t.lastUsedAt).toLocaleDateString()}` : "Never used"}</p>
+              </div>
+            </div>
+            <button onClick={() => remove.mutate(t.id)} className="shrink-0 text-gray-400 hover:text-rose-500">
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+        {!tokens?.length && <p className="text-xs text-gray-400">No tokens yet.</p>}
       </div>
     </Card>
   );

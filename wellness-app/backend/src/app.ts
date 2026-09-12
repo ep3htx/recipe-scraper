@@ -9,6 +9,7 @@ import { notFoundHandler, errorHandler } from "./middleware/errorHandler";
 import healthRoutes from "./routes/health.routes";
 import authRoutes from "./routes/auth.routes";
 import usersRoutes from "./routes/users.routes";
+import apiTokensRoutes from "./routes/apiTokens.routes";
 import goalsRoutes from "./routes/goals.routes";
 import weightRoutes from "./routes/weight.routes";
 import measurementsRoutes from "./routes/measurements.routes";
@@ -50,6 +51,7 @@ export function createApp() {
   app.use("/api/health", healthRoutes);
   app.use("/api/auth", authRoutes);
   app.use("/api/users", usersRoutes);
+  app.use("/api/tokens", apiTokensRoutes);
   app.use("/api/goals", goalsRoutes);
   app.use("/api/weight", weightRoutes);
   app.use("/api/measurements", measurementsRoutes);

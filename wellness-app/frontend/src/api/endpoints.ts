@@ -27,6 +27,7 @@ import type {
   AIConversation,
   AIInsight,
   ChartPoint,
+  ApiToken,
 } from "./types";
 
 // ---- Auth ----
@@ -41,6 +42,13 @@ export const authApi = {
 export const usersApi = {
   updateProfile: (data: Partial<User>) => api.put<User>("/users/me", data),
   changePassword: (currentPassword: string, newPassword: string) => api.put<void>("/users/me/password", { currentPassword, newPassword }),
+};
+
+// ---- Personal API tokens (for iOS Shortcuts, scripts, etc.) ----
+export const apiTokensApi = {
+  list: () => api.get<ApiToken[]>("/tokens"),
+  create: (name: string) => api.post<ApiToken & { token: string }>("/tokens", { name }),
+  remove: (id: string) => api.delete<void>(`/tokens/${id}`),
 };
 
 // ---- Dashboard ----
