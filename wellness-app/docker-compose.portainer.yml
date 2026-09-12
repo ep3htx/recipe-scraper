@@ -94,6 +94,26 @@ services:
     networks:
       - proxy
 
+  # Splits "/" -> frontend and "/api" -> backend on plain HTTP internally.
+  # NPM terminates TLS and forwards here with a bare "Details tab" config —
+  # NPM's own Custom Locations / Advanced per-host config features are
+  # unreliable in some versions (confirmed: they silently stop generating
+  # that host's nginx config entirely), so the path-splitting logic lives
+  # here instead, in a config file we control directly.
+  wellness-nginx:
+    image: nginx:1.27-alpine
+    container_name: wellness-nginx
+    restart: unless-stopped
+    depends_on:
+      - wellness-backend
+      - wellness-frontend
+    volumes:
+      - ./nginx/portainer-internal.conf:/etc/nginx/conf.d/default.conf:ro
+    expose:
+      - "80"
+    networks:
+      - proxy
+
   # Optional local AI runtime. Not started by default.
   # Enable with: docker compose -f docker-compose.portainer.yml --profile local-ai up -d
   # Then set WELLNESS_AI_PROVIDER=ollama in Portainer's stack env vars.
