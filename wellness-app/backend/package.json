@@ -16,7 +16,8 @@
     "seed:foods": "node dist/scripts/seedFoods.js",
     "seed:exercises": "node dist/scripts/seedExercises.js",
     "seed:programs": "node dist/scripts/seedPrograms.js",
-    "seed:restaurant-foods": "node dist/scripts/seedRestaurantFoods.js"
+    "seed:restaurant-foods": "node dist/scripts/seedRestaurantFoods.js",
+    "seed:usda-grocery-foods": "node dist/scripts/seedUsdaGroceryFoods.js"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
