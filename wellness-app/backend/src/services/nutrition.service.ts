@@ -28,9 +28,12 @@ export interface ComputedMealItem {
   sodium?: number;
 }
 
-// Resolves each meal item to a concrete macro snapshot, pulling per-serving
-// values from the linked Food/Recipe and scaling by quantity, or trusting
-// client-supplied values for a fully custom / AI-generated item.
+// Resolves each meal item to a concrete macro snapshot. For a linked
+// Food/Recipe, pulls its per-serving values and scales by quantity. For a
+// fully custom / AI-generated item, the client-supplied calories/protein/
+// carbs/fat/fiber/sodium are likewise treated as PER-SERVING values (to
+// match the shared "Quantity / servings" field in the Add Meal UI) and
+// scaled by quantity here -- they are NOT already-totaled amounts.
 export async function resolveMealItems(userId: string, items: MealItemInput[]): Promise<ComputedMealItem[]> {
   const resolved: ComputedMealItem[] = [];
   for (const item of items) {
@@ -67,12 +70,12 @@ export async function resolveMealItems(userId: string, items: MealItemInput[]): 
       resolved.push({
         description: item.description,
         quantity: item.quantity,
-        calories: item.calories,
-        protein: item.protein,
-        carbs: item.carbs,
-        fat: item.fat,
-        fiber: item.fiber,
-        sodium: item.sodium,
+        calories: item.calories * item.quantity,
+        protein: item.protein * item.quantity,
+        carbs: item.carbs * item.quantity,
+        fat: item.fat * item.quantity,
+        fiber: item.fiber ? item.fiber * item.quantity : undefined,
+        sodium: item.sodium ? item.sodium * item.quantity : undefined,
       });
     }
   }
