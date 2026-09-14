@@ -1,5 +1,5 @@
 import { prisma } from "../db/prisma";
-import { toDateOnly } from "../utils/date";
+import { toDateOnly, todayDateOnly } from "../utils/date";
 
 // Longest current run of consecutive completed days, walking backward from
 // today (or yesterday, so a habit already done today doesn't get penalized
@@ -14,7 +14,7 @@ export async function calcStreak(userId: string, habitId: string): Promise<numbe
 
   const completedDates = new Set(entries.map((e) => toDateOnly(e.date).getTime()));
   let streak = 0;
-  const cursor = toDateOnly(new Date());
+  const cursor = todayDateOnly();
 
   // Allow the streak to still count if today just hasn't been logged yet.
   if (!completedDates.has(cursor.getTime())) {

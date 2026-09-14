@@ -1,5 +1,5 @@
 import { prisma } from "../db/prisma";
-import { startOfDay, endOfDay, daysAgo, toDateOnly } from "../utils/date";
+import { startOfDay, endOfDay, daysAgo, toDateOnly, todayDateOnly } from "../utils/date";
 import { calcBMI, calcGoalProgress, summarizeTrend } from "./metrics.service";
 import { sumNutrition } from "./nutrition.service";
 import { getActiveGoal } from "./goals.service";
@@ -32,10 +32,10 @@ export async function getDashboard(userId: string) {
     prisma.bodyMeasurement.findFirst({ where: { userId }, orderBy: { recordedAt: "desc" } }),
     prisma.bloodPressureReading.findFirst({ where: { userId }, orderBy: { recordedAt: "desc" } }),
     prisma.vitalsReading.findFirst({ where: { userId }, orderBy: { recordedAt: "desc" } }),
-    prisma.stepEntry.findUnique({ where: { userId_date: { userId, date: toDateOnly(now) } } }),
+    prisma.stepEntry.findUnique({ where: { userId_date: { userId, date: todayDateOnly() } } }),
     prisma.meal.findMany({ where: { userId, eatenAt: { gte: todayStart, lte: todayEnd } }, include: { items: true } }),
     prisma.waterEntry.findMany({ where: { userId, recordedAt: { gte: todayStart, lte: todayEnd } } }),
-    prisma.sleepEntry.findUnique({ where: { userId_date: { userId, date: toDateOnly(daysAgo(1)) } } }),
+    prisma.sleepEntry.findUnique({ where: { userId_date: { userId, date: new Date(todayDateOnly().getTime() - 86_400_000) } } }),
     prisma.workoutSession.findMany({ where: { userId, startedAt: { gte: todayStart, lte: todayEnd } } }),
     prisma.habit.findMany({ where: { userId, active: true } }),
   ]);
@@ -53,7 +53,7 @@ export async function getDashboard(userId: string) {
 
   const habitsWithStatus = await Promise.all(
     habits.map(async (h) => {
-      const entry = await prisma.habitEntry.findUnique({ where: { habitId_date: { habitId: h.id, date: toDateOnly(now) } } });
+      const entry = await prisma.habitEntry.findUnique({ where: { habitId_date: { habitId: h.id, date: todayDateOnly() } } });
       return { id: h.id, name: h.name, icon: h.icon, completed: entry?.completed ?? false, streak: await calcStreak(userId, h.id) };
     })
   );

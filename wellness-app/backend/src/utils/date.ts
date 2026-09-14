@@ -19,3 +19,25 @@ export function toDateOnly(date: Date): Date {
   d.setUTCHours(0, 0, 0, 0);
   return d;
 }
+
+const APP_TIMEZONE = process.env.APP_TIMEZONE || "America/Chicago";
+
+// "Today" as the user's local calendar date (APP_TIMEZONE), encoded as
+// UTC midnight of that date -- the same representation toDateOnly()
+// produces, and the same one a client-sent "yyyy-MM-dd" string parses
+// to. The server runs in UTC, so toDateOnly(new Date()) drifts a full
+// day off the user's actual "today" for several hours every evening
+// (US Central is behind UTC). Use this instead anywhere "today" needs
+// to match a date-only value that originated from the browser.
+export function todayDateOnly(): Date {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const y = parts.find((p) => p.type === "year")!.value;
+  const m = parts.find((p) => p.type === "month")!.value;
+  const d = parts.find((p) => p.type === "day")!.value;
+  return new Date(`${y}-${m}-${d}T00:00:00.000Z`);
+}
