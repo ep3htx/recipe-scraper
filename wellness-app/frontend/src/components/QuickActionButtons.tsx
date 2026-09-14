@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Scale, HeartPulse, UtensilsCrossed, Dumbbell, Droplet, Footprints } from "lucide-react";
+import { Scale, HeartPulse, UtensilsCrossed, Dumbbell, Droplet, Footprints, Activity } from "lucide-react";
 import type { QuickLogType } from "./quickLog/QuickLogSheet";
 
 const ACTIONS: { type: QuickLogType | "meal"; label: string; icon: typeof Scale }[] = [
@@ -9,12 +9,13 @@ const ACTIONS: { type: QuickLogType | "meal"; label: string; icon: typeof Scale 
   { type: "workout", label: "Workout", icon: Dumbbell },
   { type: "water", label: "Water", icon: Droplet },
   { type: "steps", label: "Steps", icon: Footprints },
+  { type: "heartrate", label: "Resting HR", icon: Activity },
 ];
 
 export default function QuickActionButtons({ onSelect, compact = false }: { onSelect: (type: QuickLogType) => void; compact?: boolean }) {
   const navigate = useNavigate();
   return (
-    <div className="grid grid-cols-6 gap-2">
+    <div className="grid grid-cols-7 gap-2">
       {ACTIONS.map(({ type, label, icon: Icon }) => (
         <button
           key={type}

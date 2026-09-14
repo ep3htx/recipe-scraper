@@ -15,11 +15,13 @@ export default function Log() {
 
   const weights = useQuery({ queryKey: ["weight", "list"], queryFn: () => weightApi.list() });
   const bp = useQuery({ queryKey: ["vitals", "bp", "list"], queryFn: () => vitalsApi.listBloodPressure() });
+  const vitals = useQuery({ queryKey: ["vitals", "list"], queryFn: () => vitalsApi.list() });
   const water = useQuery({ queryKey: ["water", "today"], queryFn: waterApi.today });
   const workouts = useQuery({ queryKey: ["exercise", "list"], queryFn: () => exerciseApi.list() });
 
   const deleteWeight = useMutation({ mutationFn: weightApi.remove, onSuccess: invalidate });
   const deleteBP = useMutation({ mutationFn: vitalsApi.removeBloodPressure, onSuccess: invalidate });
+  const deleteVitals = useMutation({ mutationFn: vitalsApi.remove, onSuccess: invalidate });
   const deleteWater = useMutation({ mutationFn: waterApi.remove, onSuccess: invalidate });
   const deleteWorkout = useMutation({ mutationFn: exerciseApi.remove, onSuccess: invalidate });
 
@@ -111,6 +113,22 @@ export default function Log() {
               <DateLabel date={r.recordedAt} />
             </LogRow>
           ))
+        ) : (
+          <EmptyRow />
+        )}
+      </LogSection>
+
+      <LogSection title="Resting Heart Rate">
+        {vitals.data?.filter((v) => v.restingHeartRate != null).length ? (
+          vitals.data
+            .filter((v) => v.restingHeartRate != null)
+            .slice(0, 8)
+            .map((v) => (
+              <LogRow key={v.id} onDelete={() => deleteVitals.mutate(v.id)}>
+                <span className="font-medium">{v.restingHeartRate} bpm</span>
+                <DateLabel date={v.recordedAt} />
+              </LogRow>
+            ))
         ) : (
           <EmptyRow />
         )}

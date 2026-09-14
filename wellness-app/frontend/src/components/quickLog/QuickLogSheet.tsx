@@ -4,7 +4,7 @@ import Modal from "../Modal";
 import { weightApi, vitalsApi, waterApi, exerciseApi, stepsApi } from "../../api/endpoints";
 import { format } from "date-fns";
 
-export type QuickLogType = "weight" | "bp" | "water" | "workout" | "steps";
+export type QuickLogType = "weight" | "bp" | "water" | "workout" | "steps" | "heartrate";
 
 const TITLES: Record<QuickLogType, string> = {
   weight: "Log Weight",
@@ -12,6 +12,7 @@ const TITLES: Record<QuickLogType, string> = {
   water: "Log Water",
   workout: "Log Workout",
   steps: "Log Steps",
+  heartrate: "Log Resting Heart Rate",
 };
 
 const WORKOUT_TYPES = ["walking", "running", "cycling", "strength", "resistance_bands", "kettlebells", "bodyweight", "sports", "mobility"];
@@ -27,6 +28,7 @@ export default function QuickLogSheet({ type, onClose }: { type: QuickLogType | 
       {type === "water" && <WaterForm onDone={() => (invalidate(), onClose())} />}
       {type === "workout" && <WorkoutForm onDone={() => (invalidate(), onClose())} />}
       {type === "steps" && <StepsForm onDone={() => (invalidate(), onClose())} />}
+      {type === "heartrate" && <HeartRateForm onDone={() => (invalidate(), onClose())} />}
     </Modal>
   );
 }
@@ -218,6 +220,29 @@ function StepsForm({ onDone }: { onDone: () => void }) {
       <div>
         <FieldLabel>Steps today</FieldLabel>
         <input required autoFocus inputMode="numeric" className={inputClass} value={steps} onChange={(e) => setSteps(e.target.value)} placeholder="8000" />
+      </div>
+      <SaveButton pending={mutation.isPending} />
+    </form>
+  );
+}
+
+function HeartRateForm({ onDone }: { onDone: () => void }) {
+  const [bpm, setBpm] = useState("");
+  const mutation = useMutation({
+    mutationFn: () => vitalsApi.create({ restingHeartRate: Number(bpm) }),
+    onSuccess: onDone,
+  });
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        mutation.mutate();
+      }}
+    >
+      <div>
+        <FieldLabel>Resting heart rate (bpm)</FieldLabel>
+        <input required autoFocus inputMode="numeric" className={inputClass} value={bpm} onChange={(e) => setBpm(e.target.value)} placeholder="62" />
       </div>
       <SaveButton pending={mutation.isPending} />
     </form>

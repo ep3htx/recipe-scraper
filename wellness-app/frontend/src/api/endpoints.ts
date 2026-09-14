@@ -85,6 +85,7 @@ export const vitalsApi = {
   removeBloodPressure: (id: string) => api.delete<void>(`/vitals/blood-pressure/${id}`),
   list: (query?: { from?: string; to?: string }) => api.get<VitalsReading[]>("/vitals", query),
   create: (data: Partial<VitalsReading>) => api.post<VitalsReading>("/vitals", data),
+  remove: (id: string) => api.delete<void>(`/vitals/${id}`),
   getRanges: () => api.get<VitalRange | null>("/vitals/ranges"),
   setRanges: (data: Partial<VitalRange>) => api.put<VitalRange>("/vitals/ranges", data),
 };
