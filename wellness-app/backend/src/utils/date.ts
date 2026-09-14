@@ -41,3 +41,32 @@ export function todayDateOnly(): Date {
   const d = parts.find((p) => p.type === "day")!.value;
   return new Date(`${y}-${m}-${d}T00:00:00.000Z`);
 }
+
+// Real UTC instants for the start/end of the user's local ("today")
+// calendar day (APP_TIMEZONE) -- for range-querying timestamp columns like
+// eatenAt/recordedAt (as opposed to todayDateOnly(), which is for
+// date-only columns). The server runs in UTC, so startOfDay/endOfDay
+// (which use Date#setHours, i.e. server-local time) drift from the user's
+// actual local day by several hours every evening. This instead measures
+// how far "now" is past local midnight (via Intl in APP_TIMEZONE) and
+// subtracts that from the real instant, so it's correct regardless of the
+// server's own timezone.
+export function todayLocalStart(): Date {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: APP_TIMEZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const h = Number(parts.find((p) => p.type === "hour")!.value) % 24;
+  const m = Number(parts.find((p) => p.type === "minute")!.value);
+  const sec = Number(parts.find((p) => p.type === "second")!.value);
+  const msSinceLocalMidnight = (h * 3600 + m * 60 + sec) * 1000 + now.getMilliseconds();
+  return new Date(now.getTime() - msSinceLocalMidnight);
+}
+
+export function todayLocalEnd(): Date {
+  return new Date(todayLocalStart().getTime() + 86_400_000 - 1);
+}

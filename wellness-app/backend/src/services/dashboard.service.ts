@@ -1,5 +1,5 @@
 import { prisma } from "../db/prisma";
-import { startOfDay, endOfDay, daysAgo, toDateOnly, todayDateOnly } from "../utils/date";
+import { startOfDay, endOfDay, daysAgo, toDateOnly, todayDateOnly, todayLocalStart, todayLocalEnd } from "../utils/date";
 import { calcBMI, calcGoalProgress, summarizeTrend } from "./metrics.service";
 import { sumNutrition } from "./nutrition.service";
 import { getActiveGoal } from "./goals.service";
@@ -9,8 +9,8 @@ import { calcStreak } from "./habits.service";
 // where the user stands, whether today is on track, and what's left to do.
 export async function getDashboard(userId: string) {
   const now = new Date();
-  const todayStart = startOfDay(now);
-  const todayEnd = endOfDay(now);
+  const todayStart = todayLocalStart();
+  const todayEnd = todayLocalEnd();
 
   const [
     user,

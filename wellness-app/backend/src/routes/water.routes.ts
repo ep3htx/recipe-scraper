@@ -7,7 +7,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { dateRangeQuery, dateRangeWhere } from "../utils/query";
 import { prisma } from "../db/prisma";
 import { AppError } from "../utils/AppError";
-import { startOfDay, endOfDay } from "../utils/date";
+import { todayLocalStart, todayLocalEnd } from "../utils/date";
 
 const router = Router();
 router.use(requireAuth);
@@ -34,9 +34,8 @@ router.get(
 router.get(
   "/today",
   asyncHandler(async (req: Request, res: Response) => {
-    const now = new Date();
     const entries = await prisma.waterEntry.findMany({
-      where: { userId: req.userId!, recordedAt: { gte: startOfDay(now), lte: endOfDay(now) } },
+      where: { userId: req.userId!, recordedAt: { gte: todayLocalStart(), lte: todayLocalEnd() } },
     });
     const totalOz = entries.reduce((sum, e) => sum + e.amountOz, 0);
     res.json({ totalOz, entries });

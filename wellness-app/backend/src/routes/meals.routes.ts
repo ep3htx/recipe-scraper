@@ -7,7 +7,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { dateRangeQuery, dateRangeWhere } from "../utils/query";
 import { prisma } from "../db/prisma";
 import { AppError } from "../utils/AppError";
-import { startOfDay, endOfDay } from "../utils/date";
+import { todayLocalStart, todayLocalEnd } from "../utils/date";
 import { resolveMealItems, sumNutrition } from "../services/nutrition.service";
 
 const router = Router();
@@ -51,9 +51,8 @@ router.get(
 router.get(
   "/today",
   asyncHandler(async (req: Request, res: Response) => {
-    const now = new Date();
     const meals = await prisma.meal.findMany({
-      where: { userId: req.userId!, eatenAt: { gte: startOfDay(now), lte: endOfDay(now) } },
+      where: { userId: req.userId!, eatenAt: { gte: todayLocalStart(), lte: todayLocalEnd() } },
       include: { items: true },
       orderBy: { eatenAt: "asc" },
     });
