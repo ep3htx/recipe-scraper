@@ -1,0 +1,70 @@
+[33mcommit b37c5069b11eb35c33a8cb746c20feae83337aa6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mclaude/wellness-dashboard-app-ralmn0[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/claude/wellness-dashboard-app-ralmn0[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Sep 12 17:32:00 2026 +0000
+
+    Redesign as a wide dashboard; add meal-planning and workout-program boards
+    
+    Dashboard redesign:
+    - New responsive shell: fixed sidebar + wide multi-column content on
+      desktop/tablet, original bottom-nav single-column layout preserved on
+      mobile (same routes and pages, different layout past the md breakpoint)
+    - Dashboard reworked from one long vertical stack into a grid of panels
+      (main column + a Coach/Priorities right rail on wide screens)
+    
+    Meal planning board:
+    - Weekly calendar grid (day columns x meal-type rows) replacing the old
+      flat list view — drag cards between cells (desktop) or tap "+" to
+      search and add (works everywhere, including touch)
+    - New backend endpoints: add/move/remove a single meal-plan item, and
+      add directly from a Food with macros auto-scaled by quantity
+    
+    Workout programs:
+    - New schema: WorkoutProgram / WorkoutProgramDay / WorkoutProgramExercise
+      / ProgramEnrollment, plus muscleGroup/description on Exercise and a
+      program-day link on WorkoutSession for adherence tracking
+    - Exercise library seed: 65 exercises (bodyweight-heavy, plus strength,
+      resistance bands, kettlebells, mobility) with muscle group + form notes
+    - 3 starter programs built from that library: 4-Week Bodyweight
+      Foundations, 3-Week Kettlebell Conditioning, 2-Week Resistance Band
+      Starter — enroll, see today's workout, mark complete to auto-advance
+      through the program
+    - New Programs page: today's workout, browse/enroll, full week x day
+      program board, and a searchable/filterable exercise library browser
+    
+    All of it validated against a real local Postgres (not just typecheck):
+    migrations applied cleanly, every new endpoint smoke-tested end to end,
+    and every page + the new drag/drop and modals verified in an actual
+    browser with zero console errors.
+
+[33mcommit 57bb89a0abac0ee3199ee8ff674f97f033af81eb[m
+Author: Claude <noreply@anthropic.com>
+Date:   Wed Sep 9 19:42:16 2026 +0000
+
+    Add self-hosted personal wellness dashboard app
+    
+    Full-stack weight-loss and wellness platform under wellness-app/, built
+    for a home-server deployment behind Nginx with HTTPS:
+    
+    - Backend: Express + TypeScript + PostgreSQL (Prisma), JWT auth with
+      httpOnly refresh cookies, rate limiting, audit logging. Domain services
+      and REST routes for weight/body measurements, blood pressure & vitals
+      (with user-defined target ranges, never diagnostic), nutrition/foods/
+      recipes/meals, meal planning, grocery lists, pantry, exercise, habits,
+      water/sleep/steps, goals, progress charts, and CSV/JSON/PDF export.
+    - AI Coach: provider-agnostic abstraction (OpenAI, Ollama, or disabled)
+      behind a single AIService, with a safety layer that forbids diagnosis
+      or medication guidance, trend-based context building (not single-point
+      reactions), conversational chat, daily/weekly/monthly insights, AI meal
+      planning and substitutions, and a pantry "what can I make tonight"
+      assistant. The app runs fully with AI disabled.
+    - Frontend: React + TypeScript + Vite + Tailwind, mobile-first with a
+      bottom nav (Home/Log/Meals/Coach/Progress), quick-action logging
+      sheets, progress rings, trend charts (Recharts), and dark/light mode.
+    - Infra: Docker Compose (frontend, backend, postgres, nginx, optional
+      Ollama profile), production Nginx config (HTTPS, HSTS/CSP headers,
+      rate limiting, WebSocket support, Postgres never exposed), backup/
+      restore/self-signed-cert scripts, and a full installation README.
+    
+    Backend and frontend both typecheck and build cleanly; docker-compose
+    config validated. Live container pulls from Docker Hub could not be
+    tested in this sandbox (egress policy blocks the registry CDN host).

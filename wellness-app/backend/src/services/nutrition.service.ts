@@ -42,6 +42,7 @@ export async function resolveMealItems(userId: string, items: MealItemInput[]): 
       if (!food) throw AppError.notFound(`Food ${item.foodId} not found`);
       resolved.push({
         foodId: food.id,
+        description: food.name,
         quantity: item.quantity,
         calories: food.calories * item.quantity,
         protein: food.protein * item.quantity,
@@ -55,6 +56,7 @@ export async function resolveMealItems(userId: string, items: MealItemInput[]): 
       if (!recipe) throw AppError.notFound(`Recipe ${item.recipeId} not found`);
       resolved.push({
         recipeId: recipe.id,
+        description: recipe.name,
         quantity: item.quantity,
         calories: (recipe.caloriesPerServing ?? 0) * item.quantity,
         protein: (recipe.proteinPerServing ?? 0) * item.quantity,
