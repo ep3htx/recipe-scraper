@@ -122,11 +122,9 @@ function groupWaterByDay(rows: { recordedAt: Date; amountOz: number }[]) {
 
 export async function buildWeeklyReport(userId: string) {
   const since = new Date(Date.now() - 7 * 86_400_000);
-  const prevSince = new Date(Date.now() - 14 * 86_400_000);
 
-  const [weights, prevWeights, measurements, meals, steps, workouts, water, sleep, bp, habits] = await Promise.all([
+  const [weights, measurements, meals, steps, workouts, water, sleep, bp, habits] = await Promise.all([
     prisma.weightEntry.findMany({ where: { userId, recordedAt: { gte: since } }, orderBy: { recordedAt: "asc" } }),
-    prisma.weightEntry.findMany({ where: { userId, recordedAt: { gte: prevSince, lt: since } } }),
     prisma.bodyMeasurement.findMany({ where: { userId, recordedAt: { gte: since } }, orderBy: { recordedAt: "asc" } }),
     prisma.meal.findMany({ where: { userId, eatenAt: { gte: since } }, include: { items: true } }),
     prisma.stepEntry.findMany({ where: { userId, date: { gte: since } } }),
@@ -137,7 +135,7 @@ export async function buildWeeklyReport(userId: string) {
     prisma.habit.findMany({ where: { userId, active: true } }),
   ]);
 
-  const weightChange = weights.length >= 1 && prevWeights.length >= 1 ? weights[weights.length - 1].weight - average(prevWeights.map((w) => w.weight))! : null;
+  const weightChange = weights.length >= 2 ? weights[weights.length - 1].weight - weights[0].weight : null;
   const waistValues = measurements.filter((m) => m.waist != null).map((m) => m.waist as number);
   const waistChange = waistValues.length >= 2 ? waistValues[waistValues.length - 1] - waistValues[0] : null;
 
