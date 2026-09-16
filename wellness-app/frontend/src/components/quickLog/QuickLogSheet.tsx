@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Modal from "../Modal";
-import { weightApi, vitalsApi, waterApi, exerciseApi, stepsApi } from "../../api/endpoints";
+import { weightApi, vitalsApi, waterApi, exerciseApi, stepsApi, measurementsApi } from "../../api/endpoints";
 import { format } from "date-fns";
 
-export type QuickLogType = "weight" | "bp" | "water" | "workout" | "steps" | "heartrate";
+export type QuickLogType = "weight" | "bp" | "water" | "workout" | "steps" | "heartrate" | "measurements";
 
 const TITLES: Record<QuickLogType, string> = {
   weight: "Log Weight",
@@ -13,6 +13,7 @@ const TITLES: Record<QuickLogType, string> = {
   workout: "Log Workout",
   steps: "Log Steps",
   heartrate: "Log Resting Heart Rate",
+  measurements: "Log Body Measurements",
 };
 
 const WORKOUT_TYPES = ["walking", "running", "cycling", "strength", "resistance_bands", "kettlebells", "bodyweight", "sports", "mobility"];
@@ -29,6 +30,7 @@ export default function QuickLogSheet({ type, onClose }: { type: QuickLogType | 
       {type === "workout" && <WorkoutForm onDone={() => (invalidate(), onClose())} />}
       {type === "steps" && <StepsForm onDone={() => (invalidate(), onClose())} />}
       {type === "heartrate" && <HeartRateForm onDone={() => (invalidate(), onClose())} />}
+      {type === "measurements" && <MeasurementsForm onDone={() => (invalidate(), onClose())} />}
     </Modal>
   );
 }
@@ -243,6 +245,45 @@ function HeartRateForm({ onDone }: { onDone: () => void }) {
       <div>
         <FieldLabel>Resting heart rate (bpm)</FieldLabel>
         <input required autoFocus inputMode="numeric" className={inputClass} value={bpm} onChange={(e) => setBpm(e.target.value)} placeholder="62" />
+      </div>
+      <SaveButton pending={mutation.isPending} />
+    </form>
+  );
+}
+
+
+function MeasurementsForm({ onDone }: { onDone: () => void }) {
+  const [waist, setWaist] = useState("");
+  const [chest, setChest] = useState("");
+  const [hips, setHips] = useState("");
+  const mutation = useMutation({
+    mutationFn: () =>
+      measurementsApi.create({
+        waist: waist ? Number(waist) : undefined,
+        chest: chest ? Number(chest) : undefined,
+        hips: hips ? Number(hips) : undefined,
+      }),
+    onSuccess: onDone,
+  });
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        mutation.mutate();
+      }}
+    >
+      <div>
+        <FieldLabel>Waist (in)</FieldLabel>
+        <input required autoFocus inputMode="decimal" className={inputClass} value={waist} onChange={(e) => setWaist(e.target.value)} placeholder="34.5" />
+      </div>
+      <div>
+        <FieldLabel>Chest (in, optional)</FieldLabel>
+        <input inputMode="decimal" className={inputClass} value={chest} onChange={(e) => setChest(e.target.value)} placeholder="42" />
+      </div>
+      <div>
+        <FieldLabel>Hips (in, optional)</FieldLabel>
+        <input inputMode="decimal" className={inputClass} value={hips} onChange={(e) => setHips(e.target.value)} placeholder="40" />
       </div>
       <SaveButton pending={mutation.isPending} />
     </form>

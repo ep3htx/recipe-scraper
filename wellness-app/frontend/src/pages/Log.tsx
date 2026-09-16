@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Trash2, Moon, Footprints, Dumbbell, ChevronRight } from "lucide-react";
-import { weightApi, vitalsApi, waterApi, exerciseApi, sleepApi, stepsApi } from "../api/endpoints";
+import { weightApi, vitalsApi, waterApi, exerciseApi, sleepApi, stepsApi, measurementsApi } from "../api/endpoints";
 import Card from "../components/Card";
 import QuickActionButtons from "../components/QuickActionButtons";
 import QuickLogSheet, { type QuickLogType } from "../components/quickLog/QuickLogSheet";
@@ -18,12 +18,14 @@ export default function Log() {
   const vitals = useQuery({ queryKey: ["vitals", "list"], queryFn: () => vitalsApi.list() });
   const water = useQuery({ queryKey: ["water", "today"], queryFn: waterApi.today });
   const workouts = useQuery({ queryKey: ["exercise", "list"], queryFn: () => exerciseApi.list() });
+  const measurements = useQuery({ queryKey: ["measurements", "list"], queryFn: () => measurementsApi.list() });
 
   const deleteWeight = useMutation({ mutationFn: weightApi.remove, onSuccess: invalidate });
   const deleteBP = useMutation({ mutationFn: vitalsApi.removeBloodPressure, onSuccess: invalidate });
   const deleteVitals = useMutation({ mutationFn: vitalsApi.remove, onSuccess: invalidate });
   const deleteWater = useMutation({ mutationFn: waterApi.remove, onSuccess: invalidate });
   const deleteWorkout = useMutation({ mutationFn: exerciseApi.remove, onSuccess: invalidate });
+  const deleteMeasurement = useMutation({ mutationFn: measurementsApi.remove, onSuccess: invalidate });
 
   const today = format(new Date(), "yyyy-MM-dd");
   const [sleepHours, setSleepHours] = useState("");
@@ -129,6 +131,25 @@ export default function Log() {
                 <DateLabel date={v.recordedAt} />
               </LogRow>
             ))
+        ) : (
+          <EmptyRow />
+        )}
+      </LogSection>
+
+      <LogSection title="Body Measurements">
+        {measurements.data?.length ? (
+          measurements.data.slice(0, 8).map((m) => (
+            <LogRow key={m.id} onDelete={() => deleteMeasurement.mutate(m.id)}>
+              <span className="font-medium">
+                {[
+                  m.waist != null ? `${m.waist} in waist` : null,
+                  m.chest != null ? `${m.chest} in chest` : null,
+                  m.hips != null ? `${m.hips} in hips` : null,
+                ].filter(Boolean).join(", ")}
+              </span>
+              <DateLabel date={m.recordedAt} />
+            </LogRow>
+          ))
         ) : (
           <EmptyRow />
         )}
