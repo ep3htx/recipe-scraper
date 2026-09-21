@@ -121,6 +121,7 @@ export interface Food {
   id: string;
   name: string;
   brand?: string | null;
+  barcode?: string | null;
   servingSize: string;
   calories: number;
   protein: number;
@@ -358,3 +359,41 @@ export interface ChartPoint {
   systolic?: number;
   diastolic?: number;
 }
+
+// ---- Barcode entry & supplements ----
+export interface Supplement {
+  id: string;
+  name: string;
+  brand?: string | null;
+  barcode?: string | null;
+  servingSize?: string | null;
+  notes?: string | null;
+  takenToday?: number;
+}
+
+export interface FoodCandidate {
+  name: string;
+  brand?: string;
+  servingSize: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number;
+  sodium?: number; // mg
+}
+
+export interface BarcodeLookup {
+  code: string; // normalised 14-digit GTIN
+  found: boolean;
+  source?: "local" | "openfoodfacts";
+  kind?: "food" | "supplement";
+  food?: Food;
+  supplement?: Supplement;
+  candidate?: FoodCandidate;
+  lookupUnavailable?: boolean;
+}
+
+export type BarcodeSaveInput =
+  | { kind: "food"; code: string; name: string; brand?: string; servingSize: string; calories: number; protein: number; carbs: number; fat: number; fiber?: number; sodium?: number }
+  | { kind: "supplement"; code: string; name: string; brand?: string; servingSize?: string; notes?: string };

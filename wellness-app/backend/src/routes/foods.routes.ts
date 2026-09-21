@@ -6,6 +6,7 @@ import { validateBody } from "../middleware/validate";
 import { asyncHandler } from "../utils/asyncHandler";
 import { prisma } from "../db/prisma";
 import { AppError } from "../utils/AppError";
+import { normalizeBarcode } from "../services/barcode.service";
 
 const router = Router();
 router.use(requireAuth);
@@ -13,6 +14,7 @@ router.use(requireAuth);
 const foodSchema = z.object({
   name: z.string().min(1).max(200),
   brand: z.string().max(200).optional(),
+  barcode: z.string().max(32).transform((v) => normalizeBarcode(v)).optional(),
   servingSize: z.string().min(1).max(100),
   calories: z.number().min(0),
   protein: z.number().min(0),

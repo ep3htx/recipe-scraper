@@ -28,6 +28,9 @@ import type {
   AIInsight,
   ChartPoint,
   ApiToken,
+  Supplement,
+  BarcodeLookup,
+  BarcodeSaveInput,
 } from "./types";
 
 // ---- Auth ----
@@ -144,6 +147,20 @@ export const pantryApi = {
   list: () => api.get<PantryItem[]>("/pantry"),
   create: (data: { name: string; quantity?: string }) => api.post<PantryItem>("/pantry", data),
   remove: (id: string) => api.delete<void>(`/pantry/${id}`),
+};
+
+// ---- Barcode & supplements ----
+export const barcodeApi = {
+  lookup: (code: string) => api.get<BarcodeLookup>(`/barcode/${encodeURIComponent(code)}`),
+  save: (data: BarcodeSaveInput) => api.post<{ kind: "food" | "supplement"; food?: Food; supplement?: Supplement }>("/barcode", data),
+};
+
+export const supplementsApi = {
+  list: () => api.get<Supplement[]>("/supplements"),
+  create: (data: Partial<Supplement>) => api.post<Supplement>("/supplements", data),
+  remove: (id: string) => api.delete<void>(`/supplements/${id}`),
+  log: (id: string, quantity = 1) => api.post(`/supplements/${id}/logs`, { quantity }),
+  undoLatest: (id: string) => api.delete<void>(`/supplements/${id}/logs/latest`),
 };
 
 // ---- Exercise ----

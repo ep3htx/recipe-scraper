@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Sparkles, Check } from "lucide-react";
+import { Plus, Trash2, Sparkles, Check, ScanBarcode } from "lucide-react";
 import clsx from "clsx";
 import { mealsApi, foodsApi, groceryApi, pantryApi, aiApi } from "../api/endpoints";
 import type { Food } from "../api/types";
 import Card from "../components/Card";
 import Modal from "../components/Modal";
 import MealBoard from "../components/mealBoard/MealBoard";
+import BarcodeEntryModal from "../components/BarcodeEntryModal";
+import SupplementsCard from "../components/SupplementsCard";
+import { useBarcodeWedge } from "../hooks/useBarcodeWedge";
 
 const TABS = ["Today", "Plan", "Grocery", "Pantry"] as const;
 type Tab = (typeof TABS)[number];
@@ -16,6 +19,15 @@ export default function Meals() {
   const [tab, setTab] = useState<Tab>("Today");
   const [searchParams, setSearchParams] = useSearchParams();
   const [addOpen, setAddOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanCode, setScanCode] = useState<string | undefined>();
+
+  const openScan = (code?: string) => {
+    setScanCode(code);
+    setScanOpen(true);
+  };
+  // A USB/Bluetooth scanner "typing" a code while nothing is focused opens the sheet.
+  useBarcodeWedge(openScan, !scanOpen && !addOpen);
 
   useEffect(() => {
     if (searchParams.get("add") === "1") {
@@ -31,9 +43,14 @@ export default function Meals() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Meals</h1>
         {tab === "Today" && (
-          <button onClick={() => setAddOpen(true)} className="flex items-center gap-1 rounded-full bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white active:scale-95">
-            <Plus size={16} /> Add
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => openScan()} className="flex items-center gap-1 rounded-full border border-brand-600 px-3.5 py-2 text-sm font-semibold text-brand-700 active:scale-95 dark:text-brand-300">
+              <ScanBarcode size={16} /> Scan
+            </button>
+            <button onClick={() => setAddOpen(true)} className="flex items-center gap-1 rounded-full bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white active:scale-95">
+              <Plus size={16} /> Add
+            </button>
+          </div>
         )}
       </header>
 
@@ -58,6 +75,14 @@ export default function Meals() {
       {tab === "Pantry" && <PantryTab />}
 
       <AddMealModal open={addOpen} onClose={() => setAddOpen(false)} />
+      <BarcodeEntryModal
+        open={scanOpen}
+        initialCode={scanCode}
+        onClose={() => {
+          setScanOpen(false);
+          setScanCode(undefined);
+        }}
+      />
     </div>
   );
 }
@@ -109,7 +134,8 @@ function TodayTab() {
           </div>
         );
       })}
-      {!data?.meals.length && <p className="py-8 text-center text-sm text-gray-400">No meals logged today yet.</p>}
+      {!data?.meals.length && <p className="py-4 text-center text-sm text-gray-400">No meals logged today yet.</p>}
+      <SupplementsCard />
     </div>
   );
 }

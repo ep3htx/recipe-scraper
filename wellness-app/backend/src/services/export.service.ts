@@ -4,7 +4,7 @@ import { buildWeeklyReport } from "./progress.service";
 import { getActiveGoal } from "./goals.service";
 
 export async function collectUserData(userId: string) {
-  const [weightEntries, bodyMeasurements, bloodPressure, vitals, meals, workoutSessions, goals, habitEntries, waterEntries, sleepEntries, stepEntries] =
+  const [weightEntries, bodyMeasurements, bloodPressure, vitals, meals, workoutSessions, goals, habitEntries, waterEntries, sleepEntries, stepEntries, supplementLogs] =
     await Promise.all([
       prisma.weightEntry.findMany({ where: { userId }, orderBy: { recordedAt: "asc" } }),
       prisma.bodyMeasurement.findMany({ where: { userId }, orderBy: { recordedAt: "asc" } }),
@@ -17,8 +17,9 @@ export async function collectUserData(userId: string) {
       prisma.waterEntry.findMany({ where: { userId }, orderBy: { recordedAt: "asc" } }),
       prisma.sleepEntry.findMany({ where: { userId }, orderBy: { date: "asc" } }),
       prisma.stepEntry.findMany({ where: { userId }, orderBy: { date: "asc" } }),
+      prisma.supplementLog.findMany({ where: { userId }, include: { supplement: { select: { name: true, brand: true, barcode: true } } }, orderBy: { takenAt: "asc" } }),
     ]);
-  return { weightEntries, bodyMeasurements, bloodPressure, vitals, meals, workoutSessions, goals, habitEntries, waterEntries, sleepEntries, stepEntries };
+  return { weightEntries, bodyMeasurements, bloodPressure, vitals, meals, workoutSessions, goals, habitEntries, waterEntries, sleepEntries, stepEntries, supplementLogs };
 }
 
 // Small, dependency-free CSV writer — good enough for flat health-record rows.

@@ -41,6 +41,8 @@ model User {
   mealPlans          MealPlan[]
   groceryLists       GroceryList[]
   pantryItems        PantryItem[]
+  supplements        Supplement[]
+  supplementLogs     SupplementLog[]
   workoutSessions    WorkoutSession[]
   workoutPrograms    WorkoutProgram[]
   programEnrollments ProgramEnrollment[]
@@ -243,6 +245,7 @@ model Food {
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String
   brand       String?
+  barcode     String? // GTIN-14 (zero-padded UPC/EAN), see barcode.service.ts
   servingSize String   @map("serving_size")
   calories    Float
   protein     Float
@@ -258,6 +261,7 @@ model Food {
   mealPlanItems MealPlanItem[]
 
   @@index([userId, name])
+  @@index([userId, barcode])
   @@map("foods")
 }
 
@@ -415,6 +419,42 @@ model PantryItem {
 
   @@index([userId])
   @@map("pantry_items")
+}
+
+// ---------------------------------------------------------------------------
+// Supplements (barcode-scannable; each dose taken is one SupplementLog row)
+// ---------------------------------------------------------------------------
+
+model Supplement {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  brand       String?
+  barcode     String? // GTIN-14 (zero-padded UPC/EAN)
+  servingSize String?  @map("serving_size") // e.g. "2 softgels"
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  logs SupplementLog[]
+
+  @@index([userId, barcode])
+  @@map("supplements")
+}
+
+model SupplementLog {
+  id           String     @id @default(uuid())
+  supplementId String     @map("supplement_id")
+  supplement   Supplement @relation(fields: [supplementId], references: [id], onDelete: Cascade)
+  userId       String     @map("user_id")
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quantity     Float      @default(1)
+  takenAt      DateTime   @default(now()) @map("taken_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@index([userId, takenAt])
+  @@index([supplementId])
+  @@map("supplement_logs")
 }
 
 // ---------------------------------------------------------------------------
